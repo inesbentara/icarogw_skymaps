@@ -419,6 +419,40 @@ class spinprior_ECOs(object):
         return xp.log(self.pdf(chi_1,chi_2))
     
 
+class angular_prior_dipole(object):
+    def __init__(self):
+        self.population_parameters = ['b','ra_dip','dec_dip']
+
+    def update(self,**kwargs):
+        self.b = kwargs['b']
+        self.ra_dip = kwargs['ra_dip']
+        self.dec_dip = kwargs['dec_dip']
+
+    def log_pdf(self,ra,dec):
+        xp = get_module_array(ra)
+        x_proj = xp.cos(ra)*xp.cos(dec)*self.b*xp.cos(self.ra_dip)*xp.cos(self.dec_dip)
+        y_proj = xp.sin(ra)*xp.cos(dec)*self.b*xp.sin(self.ra_dip)*xp.cos(self.dec_dip)
+        z_proj = xp.sin(dec)*self.b*xp.sin(self.dec_dip)
+        return xp.log(1+x_proj+y_proj+z_proj)-xp.log(4*xp.pi)
+
+    def pdf(self,ra,dec):
+        xp = get_module_array(ra)
+        return xp.exp(self.log_pdf(ra,dec))
+
+class angular_prior_isotropic(object):
+    def __init__(self):
+        self.population_parameters = []
+
+    def update(self,**kwargs):
+        pass
+
+    def log_pdf(self,ra,dec):
+        xp = get_module_array(ra)
+        return -xp.log(4*xp.pi)
+
+    def pdf(self,ra,dec):
+        xp = get_module_array(ra)
+        return xp.exp(self.log_pdf(ra,dec))
         
             
         

@@ -3,6 +3,31 @@ from .conversions import detector2source_jacobian, detector2source, detector2sou
 from scipy.stats import gaussian_kde
 
 
+# LVK Reviewed
+class CBC_angular_toy_rate(object):
+    def __init__(self,angular_rate,scale_free=False):
+
+        self.aw = angular_rate  
+        self.scale_free = scale_free
+        self.population_parameters = self.aw.population_parameters
+        self.scale_free = True            
+        event_parameters = ['right_ascension', 'declination']
+        self.PEs_parameters = event_parameters.copy()
+        self.injections_parameters = event_parameters.copy()
+            
+    def update(self,**kwargs):
+        
+        self.aw.update(**{key: kwargs[key] for key in self.aw.population_parameters})
+        
+    def log_rate_PE(self,prior,**kwargs):      
+        xp = get_module_array(prior)        
+        log_weights=self.aw.log_pdf(kwargs['right_ascension'],kwargs['declination'])-xp.log(prior)
+        log_out = log_weights
+        return log_out
+    
+    def log_rate_injections(self,prior,**kwargs):            
+        return self.log_rate_PE(prior,**kwargs)
+
 class CBC_mixte_pop_rate(object):
     def __init__(self,rate1, rate2, common_parameters):
         mapping_1 = {}

@@ -299,7 +299,7 @@ class galaxy_catalog(object):
         '''
         Returns the galaxy counts in the skymap as np.array
         '''
-        npixels = self.hdf5pointer['catalog'].attrs['Ngal']
+        npixels = self.hdf5pointer['catalog'].attrs['npixels']
         counts_map = np.zeros(npixels)
         for indx in range(npixels):
             ind=np.where(self.hdf5pointer['catalog/sky_indices'][:]==indx)[0]
