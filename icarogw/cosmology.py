@@ -143,8 +143,22 @@ class base_cosmology(object):
         z: xp.array
             Redshift
         
-        Reutrns
-        -------
+        Returns
+        -------def prompt_time_delay(self, observed_time_delay, z, alpha_j):
+        # Compute the comoving distance (dc) using the redshift (z)
+        dc = xp.power(self.z2Vc(z),1./3.)
+    
+        # Calculate the prompt time delay using the observed time delay, redshift, and alpha_j parameter
+        # The formula used is:
+        # prompt_time_delay = observed_time_delay * (1 + z) + alpha_j * dc / CONST_C * 3.086e+19
+        # where:
+        # - observed_time_delay: the time delay measured at the detector
+        # - z: the redshift
+        # - alpha_j: a parameter accounting for speed of gravity deviations
+        # - dc: the comoving distance in Gpc
+        # - CONST_C: the speed of light in km/s
+        # - 3.085678e+22: a conversion factor (1 Gpc in meters)
+        return (observed_time_delay - alpha_j * dc / ( 2 * COST_C ) * 3.085678e+22) / (1 + z)
         dVc_by_dzdOmega: xp.array
             comoving volume per sterdian at a given redshift in Gpc3std-1
         '''
@@ -215,6 +229,22 @@ class base_cosmology(object):
         cdf[0]=0.
         cdf_samps=np.random.rand(Nsamp)
         return np.interp(cdf_samps,cdf,zproxy)
+        
+    def prompt_time_delay(self, observed_time_delay, z, alpha_j):
+        # Compute the comoving distance (dc) using the redshift (z)
+        dc = xp.power(self.z2Vc(z),1./3.)
+    
+        # Calculate the prompt time delay using the observed time delay, redshift, and alpha_j parameter
+        # The formula used is:
+        # prompt_time_delay = observed_time_delay * (1 + z) + alpha_j * dc / CONST_C * 3.086e+19
+        # where:
+        # - observed_time_delay: the time delay measured at the detector
+        # - z: the redshift
+        # - alpha_j: a parameter accounting for speed of gravity deviations
+        # - dc: the comoving distance in Gpc
+        # - CONST_C: the speed of light in km/s
+        # - 3.085678e+22: a conversion factor (1 Gpc in meters)
+        return (observed_time_delay - alpha_j * dc / ( 2 * COST_C ) * 3.085678e+22) / (1 + z)
     
 # LVK Reviewed
 class astropycosmology(base_cosmology):
