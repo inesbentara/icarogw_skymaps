@@ -421,13 +421,14 @@ class spinprior_ECOs(object):
 
 class angular_prior_dipole(object):
     def __init__(self):
-        self.population_parameters = ['b','ra_dip','dec_dip']
+        self.population_parameters = ['b','ra_dip','cos_dec_dip']
 
     def update(self,**kwargs):
         self.b = kwargs['b']
         self.ra_dip = kwargs['ra_dip']
-        self.dec_dip = kwargs['dec_dip']
-
+        self.cos_dec_dip = kwargs['cos_dec_dip']
+        self.dec_dip = np.arccos(self.cos_dec_dip) - 0.5*np.pi 
+        
     def log_pdf(self,ra,dec):
         xp = get_module_array(ra)
         x_proj = xp.cos(ra)*xp.cos(dec)*self.b*xp.cos(self.ra_dip)*xp.cos(self.dec_dip)
