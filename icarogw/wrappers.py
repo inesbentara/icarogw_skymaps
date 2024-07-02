@@ -613,6 +613,31 @@ class massprior_BinModel2d(pm1m2_prob):
         self.prior=pdf_dist
 
 
+class tgrprior_gaussian(pm_prob):
+    def __init__(self,alpha):
+        self.population_parameters=['mu_A_alpha','sigma_A_alpha']
+        self.alpha = alpha
+    def update(self,**kwargs):
+        self.prior=TruncatedGaussian(meang=kwargs['mu_A_alpha'],sigmag=kwargs['sigma_A_alpha']
+                                     ,ming=kwargs['mu_A_alpha']-5*kwargs['sigma_A_alpha'],maxg=kwargs['mu_A_alpha']+5*kwargs['sigma_A_alpha'])
+
+
+class tgrprior_LogUniform(pm_prob):
+    def __init__(self,alpha):
+        self.population_parameters=['min_log_10_A_alpha','max_log_10_A_alpha']
+        self.alpha = alpha
+    def update(self,**kwargs):
+        self.Amin=kwargs['min_log_10_A_alpha']
+        self.Amax=kwargs['max_log_10_A_alpha']
+    def log_pdf(self,x):
+        xp = get_module_array(x)
+        out = -xp.log(self.Amax-self.Amin)*xp.ones_like(x)
+        out[(x<self.Amin) | (x>self.Amax)] = -xp.inf
+        return out
+        
+    def pdf(self,x):
+        return xp.exp(self.log_pdf(x))
+
 
 class spinprior_default_evolving_gaussian(object):
     def __init__(self):

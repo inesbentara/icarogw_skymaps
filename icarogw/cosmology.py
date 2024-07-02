@@ -242,6 +242,22 @@ class astropycosmology(base_cosmology):
             self.log10_dl_at_z_gpu=np2cp(self.log10_dl_at_z_cpu)
             self.log10_ddl_by_dz_gpu=np2cp(self.log10_ddl_by_dz_cpu)
 
+    def build_LIV_integrand(self,alpha,resolution=5000):
+        self.alpha = alpha
+        z_array = np.linspace(0.,self.zmax,resolution)
+        integrand = np.power(1+z_array,alpha-2.)/self.astropy_cosmo.efunc(z_array)
+        self.LIV_integral = cumtrapz(integrand,z_array)
+        self.z_LIV = z_array[:-1:]
+        
+    def z2Dalpha(self,z):
+        self._checkz(z)
+        origin=z.shape
+        z = z.flatten()
+        out = (COST_C*np.power(1+z,1-self.alpha)/(self.little_h*100))*np.interp(z,self.z_LIV,self.LIV_integral)
+        return np.reshape(out,origin)
+        
+        
+
 # LVK Reviewed
 class extraD_astropycosmology(astropycosmology):
     def build_cosmology(self,astropy_cosmo,D,n,Rc):

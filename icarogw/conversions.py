@@ -6,6 +6,25 @@ from ligo.skymap.io.fits import read_sky_map
 import astropy_healpix as ah
 from astropy import units as u
 
+def log_10_lambda_eff_to_log_10_Alpha(log_10_lambdaeff,cosmology,z):
+    '''
+    Converts the LIV log_10_lambda_eff to log_10_Aalpha
+
+    Parameters
+    ----------
+    log_10_lambdaeff: xp.array
+        Array of liv lambda eff
+    cosmology: class
+        Icarogw cosmological class initialized with LIV parameter alpha
+    z: array
+        Redshift array
+    '''
+    Dalpha = cosmology.z2Dalpha(z)
+    Dl = cosmology.z2dl(z)
+    xp = get_module_array(z)
+    # The float below is log10 of 1/hc in ev m
+    return (cosmology.alpha-2.)*(log_10_lambdaeff+5.907)+xp.log10(cosmology.z2dl(z)/cosmology.z2Dalpha(z))+(1-cosmology.alpha)*xp.log10(1+z)
+
 def cred_interval(sigma):
     '''
     Convert sigma error of a gaussian into a credible interval percentage
