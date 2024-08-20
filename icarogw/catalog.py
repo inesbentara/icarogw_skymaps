@@ -469,7 +469,8 @@ def calculate_interpolant_files(outfolder,z_grid,pixel,grouping,subgrouping,
                     Mv=m2M(cat['catalog'][cat[grouping].attrs['apparent_magnitude_flag']][j],cosmo_ref.z2dl(z_grid),calc_kcorr(z_grid))  
                     interpo+=absM_rate.evaluate(sch_fun,Mv)*EM_likelihood_prior_differential_volume(z_grid,
                                                                 cat['catalog']['z'][j],
-                                                                cat['catalog']['sigmaz'][j],cosmo_ref,Numsigma=cat[grouping].attrs['Numsigma'],ptype=ptype)/cat.attrs['dOmega_sterad'] 
+                                                                cat['catalog']['sigmaz'][j],
+                    cat['catalog'][cat[grouping].attrs['apparent_magnitude_flag']][j],                                                                                    cosmo_ref,calc_kcorr,sch_fun,Numsigma=cat[grouping].attrs['Numsigma'],ptype=ptype)/cat.attrs['dOmega_sterad'] 
                     # We can divide by the old grid dOmega_sterad as full pixels are all of same size
         
                 subcat.create_dataset('vals_interpolant',data=interpo)
@@ -781,7 +782,7 @@ def user_normal(x,mu,sigma):
     return xp.power(2*xp.pi*(sigma**2),-0.5)*xp.exp(-0.5*xp.power((x-mu)/sigma,2.))
 
 # LVK Reviewed
-def EM_likelihood_prior_differential_volume(z,zobs,sigmaz,cosmology,Numsigma=1.,ptype='uniform'):
+def EM_likelihood_prior_differential_volume(z,zobs,sigmaz,mobs,cosmology,calc_kcorr,sch_fun,Numsigma=1.,ptype='uniform'):
     ''' 
     A utility function meant only for this module. Calculates the EM likelihood in redshift times a uniform in comoving volume prior
     
@@ -809,6 +810,7 @@ def EM_likelihood_prior_differential_volume(z,zobs,sigmaz,cosmology,Numsigma=1.,
     # Lower limit for the integration. A galaxy must be at a positive redshift
     zvalmin=xp.array([1e-6,zobs-Numsigma*sigmaz]).max()
     #zvalmax=xp.array([z.max(),zobs+Numsigma*sigmaz]).min()    
+    Mv=m2M(mobs,cosmology.z2dl(z),calc_kcorr(z)) # Values of the absolute magnitude on the grid 
     
     if ptype=='uniform':
         
@@ -816,28 +818,49 @@ def EM_likelihood_prior_differential_volume(z,zobs,sigmaz,cosmology,Numsigma=1.,
         zvalmax=np.minimum(zobs+5.*sigmaz,cosmology.zmax)
         if zvalmax<=zvalmin:
             return xp.zeros_like(z)
-    
-        prior_eval=4*xp.pi*cosmology.dVc_by_dzdOmega_at_z(z)*((z>=(zobs-Numsigma*sigmaz)) & (z<=(zobs+Numsigma*sigmaz)))/(cosmology.z2Vc(zvalmax)-cosmology.z2Vc(zvalmin))
-    elif ptype=='gaussian':
-        
-        zvalmax=np.minimum(zobs+5.*sigmaz,cosmology.zmax)
-        if zvalmax<=zvalmin:
-            return xp.zeros_like(z)
-    
-        prior_eval=cosmology.dVc_by_dzdOmega_at_z(z)*user_normal(z,zobs,sigmaz)
+            
+        prior_eval=4*xp.pi*cosmology.dVc_by_dzdOmega_at_z(z)*((z>=(zobs-Numsigma*sigmaz)) & (z<=(zobs+Numsigma*sigmaz)))*sch_fun.evaluate(Mv,z)
+
         zproxy=xp.linspace(zvalmin,zvalmax,5000)
-        normfact=xp.trapz(cosmology.dVc_by_dzdOmega_at_z(zproxy)*user_normal(zproxy,zobs,sigmaz),zproxy)
+        Mvproxy = m2M(mobs,cosmology.z2dl(zproxy),calc_kcorr(zproxy)) # Values of the absolute magnitude on the grid
+        normfact=xp.trapz(4*xp.pi*cosmology.dVc_by_dzdOmega_at_z(zproxy)*((zproxy>=(zobs-Numsigma*sigmaz)) & (zproxy<=(zobs+Numsigma*sigmaz)))*sch_fun.evaluate(Mvproxy,zproxy)
+                          ,zproxy)
         
         if normfact==0.:
-            print(zobs,sigmaz)
-            raise ValueError('Normalization failed')
+            # If the normalization factor is 0 it means that the galaxy
+            # falls below the fainth end of the Schecter or it is at negative redshifts
+            return xp.zeros_like(z)
             
         if np.isnan(normfact):
             print(zobs,sigmaz)
             raise ValueError('Normalization failed')
             
         prior_eval/=normfact
+
+    
+    elif ptype=='gaussian':
         
+        zvalmax=np.minimum(zobs+5.*sigmaz,cosmology.zmax)
+        if zvalmax<=zvalmin:
+            return xp.zeros_like(z)
+    
+        prior_eval=cosmology.dVc_by_dzdOmega_at_z(z)*user_normal(z,zobs,sigmaz)*sch_fun.evaluate(Mv,z)
+        zproxy=xp.linspace(zvalmin,zvalmax,5000)
+        Mvproxy = m2M(mobs,cosmology.z2dl(zproxy),calc_kcorr(zproxy)) # Values of the absolute magnitude on the grid
+        normfact=xp.trapz(cosmology.dVc_by_dzdOmega_at_z(zproxy)*user_normal(zproxy,zobs,sigmaz)*sch_fun.evaluate(Mvproxy,zproxy),zproxy)
+        
+        if normfact==0.:
+            # If the normalization factor is 0 it means that the galaxy
+            # falls below the fainth end of the Schecter or it is at negative redshifts
+            return xp.zeros_like(z)
+            
+        if np.isnan(normfact):
+            print(zobs,sigmaz)
+            raise ValueError('Normalization failed')
+            
+        prior_eval/=normfact
+
+    # Deprecated
     elif ptype=='gaussian_nocom':
         
         zvalmax=np.minimum(zobs+5.*sigmaz,cosmology.zmax)
