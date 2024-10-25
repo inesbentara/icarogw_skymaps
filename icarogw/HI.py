@@ -55,6 +55,6 @@ class HI_map(object):
             gcpart=xp.interp(z,z_grid,dNgal_dzdOm_sky_mean,left=0.,right=0.)
         else:
             gcpart=sx.interpolate.interpn((z_grid,pixel_grid),dNgal_dzdOm_vals,xp.column_stack([z,skypos]),bounds_error=False,
-                                fill_value=0.,method='linear') # If a posterior samples fall outside, then you return 0
+                                fill_value=0.,method='linear') # If a posterior samples fall outside, then you return0
         
         return gcpart.reshape(originshape)

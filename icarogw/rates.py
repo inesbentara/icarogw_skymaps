@@ -1171,7 +1171,7 @@ class CBC_HI_vanilla_rate(object):
     scale_free: bool
         True if you want to use the model for scale-free likelihood (no R0)
     '''
-    def __init__(self,HI_map,cosmology_wrapper,mass_wrapper,rate_wrapper,spin_wrapper=None,scale_free=False):
+    def __init__(self,HI_map,cosmology_wrapper,rate_wrapper,scale_free=False):
         
         self.HI_map = HI_map
         self.cw = cosmology_wrapper
