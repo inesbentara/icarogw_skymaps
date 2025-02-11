@@ -714,6 +714,25 @@ class beta_rate_line():
                 res[i][idx:] = right[i][zi >  self.d]
         return res
 
+class Gaussian_rate(basic_redshift_rate):
+    '''
+    Class for a truncated Gaussian redshift rate
+    '''
+    def __init__(self, mu, sigma, amp):
+        self.mu    = mu
+        self.sigma = sigma
+        self.amp   = amp
+    
+    def log_pdf(self,z):
+        xp = get_module_array(z)
+        a, b = -self.mu / self.sigma, (np.inf - self.mu) / self.sigma 
+        gaussian = xp.log( scipy.stats.truncnorm.pdf(z, a, b, loc = self.mu, scale = self.sigma) )
+        return gaussian
+    
+    def log_evaluate(self,z):
+        xp = get_module_array(z)
+        return self.amp * xp.exp(self.log_pdf(z))
+
 # LVK Reviewed
 class basic_absM_rate(object):
     '''Super class for the redshift rate
