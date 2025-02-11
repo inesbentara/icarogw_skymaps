@@ -958,3 +958,23 @@ def source2detector_jacobian(z, cosmology):
     '''
     return 1./detector2source_jacobian(z,cosmology)
     
+# LISA
+
+def detector2source_jacobian_MBH(z, mass1, q, cosmology):
+    '''
+    Calculates the detector frame to source frame Jacobian d_det/d_sour.
+
+    |J_d->s| = |J_(m1d, q, dL)->(log(m1s), log(q), z)| = (1+z) ddL/dz m1s*q/log10(e)^2
+
+    Parameters
+    ----------
+    z:      xp. arrays
+            Redshift
+    ms1:    xp. arrays
+            Primary mass in the source frame
+    cosmo:  class from the cosmology module
+            Cosmology class from the cosmology module
+    '''
+    xp = get_module_array(z)
+    const = xp.power(xp.log10(xp.e), 2)
+    return xp.abs( (1+z) * cosmology.ddl_by_dz_at_z(z) * mass1 * q * 1/const)

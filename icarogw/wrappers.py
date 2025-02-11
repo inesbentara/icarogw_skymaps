@@ -6,6 +6,7 @@ from .priors import  PowerLawGaussian, BrokenPowerLaw, PowerLawTwoGaussians, con
 from .priors import _mixed_linear_function, _mixed_double_sigmoid_function, _mixed_linear_sinusoid_function
 import copy
 from astropy.cosmology import FlatLambdaCDM, FlatwCDM
+from scipy.stats import gamma
 
 
     
@@ -2511,3 +2512,86 @@ class PowerLawRedshiftLinear_PowerLawRedshiftLinear_GaussianRedshiftLinear():
     def log_pdf(self,m,z):
         xp = get_module_array(m)
         return xp.log(self.pdf(m,z))
+
+
+# LISA populations
+
+class DoublePowerlaw:
+    """
+        Class for the primary mass distribution as two powerlaws smoothly attached at a brake point.
+        The PDF takes as input the log10 logarithm of the mass.
+    """
+    def __init__(self):
+        self.population_parameters = ['alpha', 'beta', 'mmin', 'mmax', 'm_b', 'delta']
+
+    def update(self, **kwargs):
+        for param in self.population_parameters:
+            setattr(self, param, kwargs[param])
+
+    class DoublePowerlawNoNorm:
+        def __init__(self, alpha, beta, mmin, mmax, m_b, delta):
+            self.alpha = alpha
+            self.beta  = -beta
+            self.mmin  = mmin
+            self.mmax  = mmax
+            self.m_b   = m_b
+            self.delta = delta
+
+        def log_sigmoid(self, log10_m):
+            # Logarithm of the sigmoid smoothing function.
+            xp = get_module_array(log10_m)
+            return - xp.log1p(xp.exp(-(log10_m - self.m_b) / self.delta))
+
+        def log_1msigmoid(self, log10_m):
+            # Logarithm of one minus the sigmoid smoothing function.
+            xp = get_module_array(log10_m)
+            return - xp.log1p(xp.exp( (log10_m - self.m_b) / self.delta))
+        
+        def _pdf(self, log10_m):
+            # Unnormalized smoothed double powerlaw = (1-sigma)*x^alpha + const*sigma*x^beta,
+            # with sigma = (1+exp(-k)), k = (x-m_b)/delta, and const = m_b^(alpha-beta).
+            # The function is evaluated in log for numerical stability.
+            xp = get_module_array(log10_m)
+            log_sigma   = self.log_sigmoid(log10_m)
+            log_1msigma = self.log_1msigmoid(log10_m)
+            log_const = (self.alpha - self.beta) * xp.log(self.m_b)
+            log_dpl_a = log_1msigma + self.alpha * xp.log(log10_m)
+            log_dpl_b = log_sigma   + self.beta  * xp.log(log10_m) + log_const
+            dpl = xp.exp(log_dpl_a) + xp.exp(log_dpl_b)
+
+            # Set values outside [mmin, mmax] to 0
+            dpl[(log10_m < self.mmin) | (log10_m > self.mmax)] = 0
+            return dpl
+
+    def pdf(self, log10_m):
+        # Compute the normalized PDF.
+        xp = get_module_array(log10_m)
+        dpl_no_norm = DoublePowerlaw.DoublePowerlawNoNorm(self.alpha, self.beta, self.mmin, self.mmax, self.m_b, self.delta)
+        x = np.linspace(self.mmin, self.mmax, 1000)
+        norm = xp.trapz(dpl_no_norm._pdf(x), x)
+        return dpl_no_norm._pdf(log10_m) / norm
+
+    def log_pdf(self, log10_m):
+        xp = get_module_array(log10_m)
+        return xp.log(self.pdf(log10_m))
+
+
+class Gamma():
+    """
+        Class for the mass ratio distribution as a Gamma distribution.
+        The PDF takes as input the log10 logarithm of the mass ratio.
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gamma.html#scipy.stats.gamma
+    """
+    def __init__(self):
+        self.population_parameters = ['a_gamma', 'theta']
+
+    def update(self,**kwargs):
+        self.a_gamma = kwargs['a_gamma']
+        self.theta   = kwargs['theta']
+
+    def pdf(self,log10_q):
+        return gamma.pdf(log10_q, a = self.a_gamma, scale = self.theta)
+
+    def log_pdf(self,log10_q):
+        xp = get_module_array(log10_q)
+        return xp.log(self.pdf(log10_q))
