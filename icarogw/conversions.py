@@ -3,6 +3,7 @@ import healpy as hp
 from scipy.stats import gaussian_kde, norm
 from scipy.special import spence as PL
 from ligo.skymap.io.fits import read_sky_map
+from ligo.skymap.distance import marginal_pdf
 import astropy_healpix as ah
 from astropy import units as u
 
@@ -71,7 +72,7 @@ def f_GW_ISCO(m1,m2):
 
 class ligo_skymap(object):
     
-    def __init__(self,skymapname):
+    def __init__(self, skymapname, distances=True, moc=True, nest=None):
         '''
         A class to store ligo.skymaps objects
 
@@ -79,10 +80,23 @@ class ligo_skymap(object):
         ----------
 
         skymapname: string
-            path to the fits or fits.gz file released       
+            path to the fits or fits.gz file released
+        nest: bool, optional
+            If omitted or False, then detect the pixel ordering in the FITS file and rearrange if necessary to RING indexing before returning.
+            If True, then detect the pixel ordering and rearrange if necessary to NESTED indexing before returning.
+            If None, then preserve the ordering from the FITS file.
+            Regardless of the value of this option, the ordering used in the FITS file is indicated as the value of the ‘nest’ key in the metadata dictionary.
+        distances: bool, optional
+            If true, then read also read the additional HEALPix layers representing the conditional mean and standard deviation of distance as a function of sky location.
+        moc: bool, optional
+            If true, then preserve multi-order structure if present.
         '''
+
+        self.distances = distances
+        self.moc = moc
+        self.nest = nest
         
-        self.table = read_sky_map(skymapname,distances=True,moc=True)
+        self.table = read_sky_map(skymapname, distances=self.distances, moc=self.moc, nest=self.nest)
         self.intersected = False
         
     def intersect_EM_PE(self,ra,dec):
@@ -216,7 +230,9 @@ class ligo_skymap(object):
         
         return prob, prob*pixels_area/xp.power(dl,2.)
         
-    def sample_3d_space(self,Nsamp):
+
+
+    def sample_3d_space(self, Nsamp, verbose=False, seed=None):
         '''
         Given the skymap, sample RA, DEC and dL from it.
 
@@ -224,6 +240,8 @@ class ligo_skymap(object):
         ----------
         Nsamp: int
             Number of samples to generate
+        verbose: bool, optional
+            If True, print detailed debug information during sampling.
 
         Returns
         -------
@@ -234,34 +252,115 @@ class ligo_skymap(object):
         dec: xp.array
             Declination in radians
         '''
-        
+
         xp = np
-        
+
+        if seed is not None: 
+            xp.random.seed(seed)
+
         level, ipix = ah.uniq_to_level_ipix(self.table['UNIQ'])
-        nside = ah.level_to_nside(level)    
+        nside = ah.level_to_nside(level)
         px_area = ah.nside_to_pixel_area(ah.level_to_nside(level)).value # Pixel area in steradians
-        prob = self.table['PROBDENSITY']*px_area
-        prob/=prob.sum()
-        idx = xp.random.choice(len(ipix),size=Nsamp,replace=True,p=prob) 
+        prob = self.table['PROBDENSITY'] * px_area
+        prob /= prob.sum()
+        
+        idx = xp.random.choice(len(ipix), size=Nsamp, replace=True, p=prob)
         ra, dec = ah.healpix_to_lonlat(ipix[idx], nside[idx], order='nested')
         dl = xp.zeros(len(ra))
-        
+
         match_ipix = ipix[idx]
-       
-        for i,pix in enumerate(match_ipix):
+
+        for i, pix in enumerate(match_ipix):
             idx = xp.where(ipix == pix)[0]
             dl_mean = self.table['DISTMU'][idx].value[0]
             dl_sigma = self.table['DISTSIGMA'][idx].value[0]
 
-            if dl_mean<0:
-                print('Skipping iteration {:d}, pixel {:d}, negative dl_mean {:.2f} Mpc'.format(i,pix,dl_mean))
+            # Skip iterations where dl_mean is -inf, +inf, or negative
+            if not np.isfinite(dl_mean) or dl_mean <= 0:
+                if verbose: print(f'Skipping iteration {i}, pixel {pix}, invalid dl_mean {dl_mean}')
                 continue
+
             dldraw = -1
-            while dldraw<=0:
-                dldraw = xp.random.randn()*dl_sigma+dl_mean
+            while not dldraw > 0.:
+                dldraw = xp.random.randn() * dl_sigma + dl_mean
+
+                if verbose:
+                    if dldraw <= 0.:
+                        print(f'Resampling for iteration {i}, pixel {pix}, dldraw {dldraw}')
+
+            if dldraw <= 1.: print(f"dldraw = {dldraw}")
             dl[i] = dldraw
-        
+
+        if verbose: print(f"There are {len(xp.where(dl == 0)[0])} samples equal to 0")
         return dl, ra.rad, dec.rad
+
+                
+    def sample_3d_space_marginal(self, num_samples, seed=None):
+        """
+        This function samples right ascension (RA), declination (Dec), and luminosity distance
+        from a skymap, converting the sampled values to radians and sampling the luminosity distance 
+        from marginal probability density function over all the pixels.
+    
+        Parameters:
+        -----------
+        - num_samples (int): Number of samples to generate.
+    
+        Returns:
+        --------
+        - dl_samples (numpy.ndarray): Sampled luminosity distances in megaparsecs.
+        - ra_samples_radians (numpy.ndarray): Sampled right ascension in radians.
+        - dec_samples_radians (numpy.ndarray): Sampled declination in radians.
+        """
+    
+        xp = np
+    
+        if seed is not None:
+            xp.random.seed(seed)
+    
+        prob = self.table['PROBDENSITY']
+        prob /= prob.sum()
+        
+        level, ipix = ah.uniq_to_level_ipix(self.table['UNIQ'])
+        nside = ah.level_to_nside(level)
+    
+        theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
+    
+        # Convert theta and phi to Right Ascension (RA) and Declination (Dec) in degrees
+        ra = xp.degrees(phi)               # Right Ascension in degrees
+        dec = 90. - xp.degrees(theta)      # Declination in degrees
+    
+        # Sample indices based on the probability density
+        sampled_indices = xp.random.choice(len(prob), size=num_samples, p=prob)
+        ra_samples = ra[sampled_indices]
+        dec_samples = dec[sampled_indices]
+    
+        # Extract mean and sigma of luminosity distance from skymap posteriors
+        dl_mean = self.table["DISTMU"][(self.table["DISTNORM"] > 0) & (self.table["DISTMU"] > 0)]
+        dl_sigma = self.table["DISTSIGMA"][(self.table["DISTNORM"] > 0) & (self.table["DISTMU"] > 0)]
+    
+        # Find indices of minimum and maximum mean distance
+        min_id, max_id = xp.argmin(dl_mean), xp.argmax(dl_mean)
+    
+        # Define new distance ranges with a 5-sigma margin
+        min_dist = max(1., dl_mean[min_id] - 5. * dl_sigma[min_id])
+        max_dist = dl_mean[max_id] + 5. * dl_sigma[max_id]
+    
+        # Precompute luminosity distance PDF on a grid
+        dl_grid = xp.linspace(min_dist, max_dist, 5000)
+        p_dl_values = marginal_pdf(dl_grid,
+                                    self.table["PROBDENSITY"],
+                                    self.table["DISTMU"],
+                                    self.table["DISTSIGMA"],
+                                    self.table["DISTNORM"])
+    
+        # Normalize the probability density function
+        p_dl = p_dl_values / xp.sum(p_dl_values)
+    
+        # Sample distances based on the PDF
+        dl_samples = xp.random.choice(dl_grid, size=num_samples, p=p_dl)
+    
+        return dl_samples, xp.radians(ra_samples), xp.radians(dec_samples)
+
 
 # LVK Reviewed
 def cartestianspins2chis(s1x,s1y,s1z,s2x,s2y,s2z,q):

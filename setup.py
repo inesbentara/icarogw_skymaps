@@ -13,8 +13,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url='https://github.com/simone-mastrogiovanni/icarogw',
     license='EUPL-1.2',
-    python_requires='>=3.10',
+    python_requires='>=3.9',
     packages=['icarogw'],
     install_requires=['bilby==2.3.0','mhealpy==0.3.3',
-                     'ligo.skymap==2.0.1','mpmath==1.3.0','seaborn==0.13.2']
+                     'ligo.skymap==2.0.0','mpmath==1.3.0','seaborn==0.13.2']
 )
