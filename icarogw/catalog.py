@@ -460,8 +460,8 @@ def initialize_icarogw_catalog(outfolder,outfile,grouping):
     np.savetxt(os.path.join(outfolder,'{:s}_common_zgrid.txt'.format(grouping)),z_grid)    
         
 
-def calculate_interpolant_files(outfolder,z_grid,pixel,grouping,subgrouping,
-                                band,cosmo_ref,epsilon,ptype='gaussian'):
+def calculate_interpolant_files(outfolder, z_grid, pixel, grouping, subgrouping,
+                                band, cosmo_ref, epsilon, ptype='gaussian'):
         '''
         This function calculates an optimized redshift grid to calculate
         the interpolant for each pixelated file

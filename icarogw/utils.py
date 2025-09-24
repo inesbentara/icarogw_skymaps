@@ -93,8 +93,7 @@ def check_posterior_samples_and_prior(posterior_samples, prior):
         raise ValueError('Prior can not have 0 values')
     return None
 
-def write_condor_files_catalog(home_folder,outfolder,nside,uname='simone.mastrogiovanni',
-agroup='ligo.dev.o4.cbc.hubble.icarogw'):
+def write_condor_files_catalog(home_folder, outfolder, nside, uname='simone.mastrogiovanni', agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     '''
     Writes the python scripts and condor files to pixelize a galaxy catalog.
 
@@ -141,21 +140,21 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f = open(os.path.join(home_folder,'make_pixel_files.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = make_pixel_files.sh \n')
+    f.write(f'executable = {home_folder}/make_pixel_files.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
     f.write('request_memory = 8G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 10G \n')    
-    f.write('output = logs/make_pixel_files.stdout \n')
-    f.write('error = logs/make_pixel_files.stderr \n')
+    f.write(f'output = {home_folder}/logs/make_pixel_files.stdout \n')
+    f.write(f'error = {home_folder}/logs/make_pixel_files.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue\n')
     f.close()
 
 
-def write_condor_files_nan_removal_mthr_computation(home_folder,outfolder, fields_to_take, grouping,apparent_magnitude_flag,nside_mthr,mthr_percentile,Nintegration,Numsigma,zcut,NumJobs,uname='simone.mastrogiovanni',
+def write_condor_files_nan_removal_mthr_computation(home_folder, outfolder, fields_to_take, grouping,apparent_magnitude_flag,nside_mthr,mthr_percentile,Nintegration,Numsigma,zcut,NumJobs,uname='simone.mastrogiovanni',
 agroup='ligo.dev.o4.cbc.hubble.icarogw'):
 
     '''
@@ -233,7 +232,7 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f = open(os.path.join(home_folder,'clear_NaNs.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = clear_NaNs.sh \n')
+    f.write(f'executable = {home_folder}/clear_NaNs.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
@@ -242,8 +241,8 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
 
-    f.write('output = logs/clear_nans_$(Item)_$(Item2).stdout \n')
-    f.write('error = logs/clear_nans_$(Item)_$(Item2).stderr \n')
+    f.write(f'output = {home_folder}/logs/clear_nans_$(Item)_$(Item2).stdout \n')
+    f.write(f'error = {home_folder}/logs/clear_nans_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue Item, Item2 from {:s}\n'.format(os.path.join(home_folder,'queue_NaN.txt')))
     f.close()
@@ -291,7 +290,7 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f = open(os.path.join(home_folder,'calc_mthr_and_grid.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = calc_mthr_and_grid.sh \n')
+    f.write(f'executable = {home_folder}/calc_mthr_and_grid.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
@@ -300,8 +299,8 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
 
-    f.write('output = logs/calc_mthr_and_grid_$(Item)_$(Item2).stdout \n')
-    f.write('error = logs/calc_mthr_and_grid_$(Item)_$(Item2).stderr \n')
+    f.write(f'output = {home_folder}/logs/calc_mthr_and_grid_$(Item)_$(Item2).stdout \n')
+    f.write(f'error = {home_folder}/logs/calc_mthr_and_grid_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue Item, Item2 from {:s}\n'.format(os.path.join(home_folder,'queue_NaN.txt')))
     f.close()
@@ -350,15 +349,15 @@ def write_condor_files_initialize_icarogw_catalog(home_folder,outfolder, outfile
     f = open(os.path.join(home_folder,'initialize_catalog.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = initialize_catalog.sh \n')
+    f.write(f'executable = {home_folder}/initialize_catalog.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
     f.write('request_memory = 4G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 4G \n')    
-    f.write('output = logs/initialize_catalog.stdout \n')
-    f.write('error = logs/initialize_catalog.stderr \n')
+    f.write(f'output = {home_folder}/logs/initialize_catalog.stdout \n')
+    f.write(f'error = {home_folder}/logs/initialize_catalog.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue\n')
     f.close()
@@ -443,7 +442,7 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f = open(os.path.join(home_folder,'calc_interpolant.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = calc_interpolant.sh \n')
+    f.write(f'executable = {home_folder}/calc_interpolant.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
@@ -452,8 +451,8 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
 
-    f.write('output = logs/calc_interpolant_$(Item)_$(Item2).stdout \n')
-    f.write('error = logs/calc_interpolant_$(Item)_$(Item2).stderr \n')
+    f.write(f'output = {home_folder}/logs/calc_interpolant_$(Item)_$(Item2).stdout \n')
+    f.write(f'error = {home_folder}/logs/calc_interpolant_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue Item, Item2 from {:s}\n'.format(os.path.join(home_folder,'queue_interpolant.txt')))
     f.close()
@@ -506,179 +505,182 @@ def write_condor_files_finish_catalog(home_folder,outfolder, outfile,grouping, s
     f = open(os.path.join(home_folder,'finish_catalog.sub'),'w')
     f.write('universe = vanilla\n')
     f.write('getenv = True\n')
-    f.write('executable = finish_catalog.sh \n')
+    f.write(f'executable = {home_folder}/finish_catalog.sh \n')
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
     f.write('request_memory = 4G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 4G \n')    
-    f.write('output = logs/finish_catalog.stdout \n')
-    f.write('error = logs/finish_catalog.stderr \n')
+    f.write(f'output = {home_folder}/logs/finish_catalog.stdout \n')
+    f.write(f'error = {home_folder}/logs/finish_catalog.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
     f.write('queue\n')
     f.close()
 
     os.system('chmod a+x '+os.path.join(home_folder,'*.sh'))    
 
-def write_all_scripts_catalog(home_folder,outfolder,nside,fields_to_take,grouping,apparent_magnitude_flag,
-                            nside_mthr,mthr_percentile,Nintegration,Numsigma,zcut,outfile,subgrouping,
-                            band, epsilon, NumJobs,uname='simone.mastrogiovanni', agroup='ligo.dev.o4.cbc.hubble.icarogw'):
+import os
+import numpy as np
+
+def write_all_scripts_catalog(
+    home_folder, outfolder, nside, fields_to_take, grouping, apparent_magnitude_flag,
+    nside_mthr, mthr_percentile, Nintegration, Numsigma, zcut, outfile, subgrouping,
+    band, epsilon, NumJobs, uname='albert.einstein', agroup='ligo.dev.o4.cbc.hubble.icarogw'
+):
     '''
-    A Driver to write all the python scripts required to build the galaxy catalog. It also creates a dag file to produce the catalog on condor
+    Write all scripts and condor files needed to build the galaxy catalog, 
+    and create a DAG file for producing the catalog on condor.
 
     Parameters
     ----------
-    home_folder: str
-        Where to place the running scripts
-    outfolder: str
-        Where to place the pixelated catalog
-    nside: int
-        Nside to use for pixelization of the catalog
-    fields_to_take: list
-        list of strings containing the groups to take from the pixelated files
-    grouping: str
-        Name of the new group to create in the pixelated files to save the apparent mthr cut
-    apparent_magnitude_flag: str
-        String that indetifies the group of m to use for the mthr calculation
-    nside_mthr: int
-        Nside to use for calculating the apparent magnitude thr cut
-    mthr_percentile: float
-        Percentile of galaxies to use to define mthr, between 0-100
-    Nintegration: int or np.array
-        If int, it is the number of points taken to integrate the galaxy redshift uncertainties. If np.array, it is the redshift grid resolution
-    Numsigma: int
-        Number of sigmas to consider for the EM likelihood of galaxies
-    zcut: float
-        Redshift at which to cut the galaxy catalog
-    outfile: str
-        Name of the icarogw file
-    subgrouping: str
-        Name of the new subgroup for the galaxy catalog interpolant
-    band: str
-        icarogw EM band for the Schecter function
-    epsilon: float
-        Exponent of the luminosity weight, e.g. epsilon=1 is p(L) propto L
-    NumJobs: int
-        Number of jubs to run on condor
-    uname: str
-        Username for condor
-    agroup: str
-        Accounting group for condor
+    home_folder : str   | Path to place running scripts
+    outfolder   : str   | Path to place pixelated catalog
+    nside       : int   | Pixelization parameter
+    fields_to_take: list| Groups to take from pixelated files
+    grouping    : str   | Name of new group for mthr cut
+    apparent_magnitude_flag: str | Group of m to use for mthr
+    nside_mthr  : int   | Nside for apparent mag threshold
+    mthr_percentile: float| Percentile (0-100) for mthr
+    Nintegration: int/np.ndarray | Number of int points or grid
+    Numsigma    : int   | Sigmas for EM likelihood
+    zcut        : float | Redshift cutoff
+    outfile     : str   | Name of icarogw file
+    subgrouping : str   | New subgroup for catalog interpolant
+    band        : str   | EM band for Schechter function
+    epsilon     : float | Luminosity weight exponent
+    NumJobs     : int   | Number of condor jobs
+    uname       : str   | Condor username
+    agroup      : str   | Condor accounting group
     '''
 
-    # Write the condor files for the the pixelated catalog files
-    write_condor_files_catalog(home_folder=home_folder,outfolder=outfolder,nside=nside)
-
-    fp = open(os.path.join(home_folder,'get_scripts.py'),'w')
-    fp.write('import icarogw \n')
-    fp.write('import numpy as np \n')
-    fp.write('home_folder = \'{:s}\' \n'.format(home_folder))
-    fp.write('outfolder = \'{:s}\' \n'.format(outfolder))
-    fp.write('fields_to_take = [')
-    for i,ff in enumerate(fields_to_take):
-        fp.write('\'{:s}\''.format(ff))
-        if i!=(len(fields_to_take)-1):
-            fp.write(', ')
-    fp.write(']\n')
-    fp.write('grouping = \'{:s}\' \n'.format(grouping))
-    fp.write('apparent_magnitude_flag = \'{:s}\' \n'.format(apparent_magnitude_flag))
-    fp.write('nside_mthr = {:d} \n'.format(nside_mthr))
-    fp.write('mthr_percentile = {:f} \n'.format(mthr_percentile))
-    if isinstance(Nintegration,np.ndarray):
-        fp.write('Nintegration =  np.logspace(np.log10({:f}),np.log10({:f}),{:d}) \n'.format(Nintegration.min(),Nintegration.max(),len(Nintegration)))
-    else:
-        fp.write('Nintegration =  {:d} \n'.format(Nintegration))
-    fp.write('Numsigma = {:d} \n'.format(Numsigma))
-    fp.write('zcut = {:f} \n'.format(zcut))
-    fp.write('outfile = \'{:s}\' \n'.format(outfile))
-    fp.write('subgrouping = \'{:s}\' \n'.format(subgrouping))
-    fp.write('band = \'{:s}\' \n'.format(band))
-    fp.write('epsilon = {:f} \n'.format(epsilon))
-    fp.write('NumJobs = {:d} \n'.format(NumJobs))
-    fp.write('''
-# Writhe the condor files for NaNs and mthr computation
-icarogw.utils.write_condor_files_nan_removal_mthr_computation(
-home_folder=home_folder,
-outfolder=outfolder,
-fields_to_take=fields_to_take,
-grouping=grouping,apparent_magnitude_flag=apparent_magnitude_flag,
-nside_mthr=nside_mthr,mthr_percentile=mthr_percentile,Nintegration=Nintegration,Numsigma=Numsigma,zcut=zcut,NumJobs=NumJobs)
-    ''')
-    
-
-    fp.write('''
-# Write the files to inizialize the icarogw file
-icarogw.utils.write_condor_files_initialize_icarogw_catalog(home_folder=home_folder,
-outfolder=outfolder,outfile=outfile,grouping=grouping)
-    ''')
-
-    
-    fp.write('''
-# Write the files to calculate the interpolant
-icarogw.utils.write_condor_files_calculate_interpolant(home_folder=home_folder,
-outfolder=outfolder,grouping=grouping,subgrouping=subgrouping,
-                                                   band=band,
-                                                   epsilon=epsilon,
-                                                  NumJobs=NumJobs
-                                                  )'''
-        )
-    
-    fp.write(
-    '''# Write to finish off the catalog
-icarogw.utils.write_condor_files_finish_catalog(home_folder=home_folder,
-outfolder=outfolder,outfile=outfile, grouping=grouping,subgrouping=subgrouping)
-'''
+    write_condor_files_catalog(
+        home_folder=home_folder, outfolder=outfolder, nside=nside, uname=uname, agroup=agroup
     )
 
-    fp.close()
-
-    f = open(os.path.join(home_folder,'get_scripts.sh'),'w')
-    f.write('#!/bin/bash')
-    f.write('\n')
-    f.write('MYJOB_DIR='+home_folder)
-    f.write('\n')
-    f.write('cd ${MYJOB_DIR}')
-    f.write('\n')
-    f.write('python get_scripts.py')
-    f.close()
-
-    f = open(os.path.join(home_folder,'get_scripts.sub'),'w')
-    f.write('universe = vanilla\n')
-    f.write('getenv = True\n')
-    f.write('executable = get_scripts.sh \n')
-    f.write('accounting_group = '+agroup+'\n')
-    f.write('accounting_group_user = '+uname)
-    f.write('\n')
-    f.write('request_memory = 4G \n')
-    f.write('request_cpus = 1 \n')
-    f.write('request_disk = 4G \n')    
-    f.write('output = logs/get_scripts.stdout \n')
-    f.write('error = logs/get_scripts.stderr \n')
-    f.write('Requirements = TARGET.Dual =!= True \n')
-    f.write('queue\n')
-    f.close()
-
-
-    fp = open(os.path.join(home_folder,'produce_cat.dag'),'w')
-
-    fp.write('''
-JOB A make_pixel_files.sub
-JOB A1 get_scripts.sub
-JOB B clear_NaNs.sub
-JOB C calc_mthr_and_grid.sub
-JOB D initialize_catalog.sub
-JOB E calc_interpolant.sub
-JOB F finish_catalog.sub
-
-PARENT A CHILD A1 
-PARENT A1 CHILD B 
-PARENT B CHILD C
-PARENT C CHILD D
-PARENT D CHILD E 
-PARENT E CHILD F 
-'''
+    with open(os.path.join(home_folder, 'get_scripts.py'), 'w') as fp:
+        fp.write('import icarogw\n')
+        fp.write('import numpy as np\n')
+        fp.write(f"home_folder = '{home_folder}'\n")
+        fp.write(f"outfolder = '{outfolder}'\n")
+        # fields_to_take
+        fp.write('fields_to_take = [{}]\n'.format(
+            ', '.join(f"'{f}'" for f in fields_to_take)
+        ))
+        fp.write(f"grouping = '{grouping}'\n")
+        fp.write(f"apparent_magnitude_flag = '{apparent_magnitude_flag}'\n")
+        fp.write(f"nside_mthr = {nside_mthr}\n")
+        fp.write(f"mthr_percentile = {mthr_percentile:.6f}\n")
+        if isinstance(Nintegration, np.ndarray):
+            fp.write(
+                "Nintegration = np.logspace(np.log10({:.6f}), np.log10({:.6f}), {})\n"
+                .format(Nintegration.min(), Nintegration.max(), len(Nintegration))
             )
-    fp.close()
+        else:
+            fp.write(f"Nintegration = {Nintegration}\n")
+        fp.write(f"Numsigma = {Numsigma}\n")
+        fp.write(f"zcut = {zcut:.6f}\n")
+        fp.write(f"outfile = '{outfile}'\n")
+        fp.write(f"subgrouping = '{subgrouping}'\n")
+        fp.write(f"band = '{band}'\n")
+        fp.write(f"epsilon = {epsilon:.6f}\n")
+        fp.write(f"NumJobs = {NumJobs}\n\n")
+        fp.write(f"uname = '{uname}'\n")
+        fp.write(f"agroup = '{agroup}'\n\n")
 
-    os.system('chmod a+x '+os.path.join(home_folder,'*.sh'))    
+        fp.write(
+            "# Write the condor files for NaNs and mthr computation\n"
+            "icarogw.utils.write_condor_files_nan_removal_mthr_computation(\n"
+            "    home_folder=home_folder,\n"
+            "    outfolder=outfolder,\n"
+            "    fields_to_take=fields_to_take,\n"
+            "    grouping=grouping,\n"
+            "    apparent_magnitude_flag=apparent_magnitude_flag,\n"
+            "    nside_mthr=nside_mthr,\n"
+            "    mthr_percentile=mthr_percentile,\n"
+            "    Nintegration=Nintegration,\n"
+            "    Numsigma=Numsigma,\n"
+            "    zcut=zcut,\n"
+            "    NumJobs=NumJobs,\n"
+            "    uname=uname,\n"
+            "    agroup=agroup\n"
+            ")\n\n"
+        )
+        fp.write(
+            "# Initialize the icarogw file\n"
+            "icarogw.utils.write_condor_files_initialize_icarogw_catalog(\n"
+            "    home_folder=home_folder,\n"
+            "    outfolder=outfolder,\n"
+            "    outfile=outfile,\n"
+            "    grouping=grouping,\n"
+            "    uname=uname,\n"
+            "    agroup=agroup\n"
+            ")\n\n"
+        )
+        fp.write(
+            "# Calculate the interpolant\n"
+            "icarogw.utils.write_condor_files_calculate_interpolant(\n"
+            "    home_folder=home_folder,\n"
+            "    outfolder=outfolder,\n"
+            "    grouping=grouping,\n"
+            "    subgrouping=subgrouping,\n"
+            "    band=band,\n"
+            "    epsilon=epsilon,\n"
+            "    NumJobs=NumJobs,\n"
+            "    uname=uname,\n"
+            "    agroup=agroup\n"
+            ")\n\n"
+        )
+        fp.write(
+            "# Finish catalog\n"
+            "icarogw.utils.write_condor_files_finish_catalog(\n"
+            "    home_folder=home_folder,\n"
+            "    outfolder=outfolder,\n"
+            "    outfile=outfile,\n"
+            "    grouping=grouping,\n"
+            "    subgrouping=subgrouping,\n"
+            "    uname=uname,\n"
+            "    agroup=agroup\n"
+            ")\n"
+        )
+
+    with open(os.path.join(home_folder, 'get_scripts.sh'), 'w') as f:
+        f.write('#!/bin/bash\n')
+        f.write(f"MYJOB_DIR={home_folder}\n")
+        f.write("cd ${MYJOB_DIR}\n")
+        f.write("python get_scripts.py\n")
+
+    with open(os.path.join(home_folder, 'get_scripts.sub'), 'w') as f:
+        f.write(
+            "universe = vanilla\n"
+            "getenv = True\n"
+            f"executable = {home_folder}/get_scripts.sh\n"
+            f"accounting_group = {agroup}\n"
+            f"accounting_group_user = {uname}\n"
+            "request_memory = 4G\n"
+            "request_cpus = 1\n"
+            "request_disk = 4G\n"
+            f"output = {home_folder}/logs/get_scripts.stdout\n"
+            f"error = {home_folder}/logs/get_scripts.stderr\n"
+            "Requirements = TARGET.Dual =!= True\n"
+            "queue\n"
+        )
+
+    with open(os.path.join(home_folder, 'produce_cat.dag'), 'w') as fp:
+        fp.write(
+            f"JOB A {home_folder}/make_pixel_files.sub\n"
+            f"JOB A1 {home_folder}/get_scripts.sub\n"
+            f"JOB B {home_folder}/clear_NaNs.sub\n"
+            f"JOB C {home_folder}/calc_mthr_and_grid.sub\n"
+            f"JOB D {home_folder}/initialize_catalog.sub\n"
+            f"JOB E {home_folder}/calc_interpolant.sub\n"
+            f"JOB F {home_folder}/finish_catalog.sub\n\n"
+            "PARENT A CHILD A1\n"
+            "PARENT A1 CHILD B\n"
+            "PARENT B CHILD C\n"
+            "PARENT C CHILD D\n"
+            "PARENT D CHILD E\n"
+            "PARENT E CHILD F\n"
+        )
+
+    os.system(f'chmod a+x {os.path.join(home_folder, "*.sh")}')

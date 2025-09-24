@@ -123,28 +123,27 @@ class injections(object):
         
         return self.Tobs*self.pseudo_rate
     
-    def return_reweighted_injections(self,Nsamp,replace=True):
+    def return_reweighted_injections(self, Nsamp, replace=True):
         '''
         Return a set of injections detected by reweighting with the loaded rate model
-        
+    
         Parameters
         ----------
-        
         Nsamp: int
             Samples to generate
         replace: bool
             Replace the injections with a copy once drawn
-            
+    
         Returns
         -------
-        Dictionary of reweighted injections
+        Tuple containing:
+        - Dictionary of reweighted injections
+        - Array of selected indices
         '''
+        
         xp = get_module_array(self.log_weights)
         prob = xp.exp(self.log_weights)
-        prob/=prob.sum()
-        idx = xp.random.choice(len(self.prior),replace=replace,p=prob,size=Nsamp)
-        return {key:self.injections_data[key][idx] for key in list(self.injections_data.keys())}
-        
-        
-        
- 
+        prob /= prob.sum()
+        idx = xp.random.choice(len(self.prior), replace=replace, p=prob, size=Nsamp)
+        reweighted_injections = {key: self.injections_data[key][idx] for key in self.injections_data}
+        return reweighted_injections, idx
