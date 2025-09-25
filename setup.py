@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
     name='icarogw',
     version='2.0.3',
-    author='Simone Mastrogiovanni',
+    author='Simone Mastrogiovanni, Gregoire Pierra, Vasco Gennari, Sarah Ferraiuolo, Leonardo Iampieri',
     author_email='simone.mastrogiovanni@ligo.org',
     description='A python package for inference of population properties of noisy, heterogeneous and incomplete observations',
     long_description=long_description,
