@@ -416,6 +416,21 @@ class galaxy_MF(object):
                 self.Mmin,self.Mmax,self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -24.0, -17.0, -20.64, -1.09, 1.43e-2*1e9, 0., 0., 0.1
             elif band=='W1-upglade':
                 self.Mmin,self.Mmax,self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -26.0, -20.0, -23.80, -1.14, 0.86e-2*1e9, 0., 0., 0.1
+            
+            # -------------------- NEW: MICE / SDSS (Blanton+2003) --------------------
+            # All numbers are for Ωm=0.3, ΩΛ=0.7
+            # Source: Table 1, 2 and 3 in Blanton et al. 2003 (ApJ 592, 819)
+            elif (band=='u-mice'):
+                self.Mmin,self.Mmax, self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -21.93, -15.54, -17.93, -0.92, 3.05e-2*1e9, 4.22, 3.20, 0.1
+            elif (band=='g-mice'):
+                self.Mmin,self.Mmax, self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -23.38, -16.10, -19.39, -0.89, 2.18e-2*1e9, 2.04, 0.32, 0.1
+            elif (band=='r-mice'):
+                self.Mmin,self.Mmax, self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -24.26, -16.11, -20.44, -1.05, 1.49e-2*1e9, 1.62, 0.18, 0.1
+            elif (band=='i-mice'):
+                self.Mmin,self.Mmax, self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -23.84, -17.07, -20.82, -1.00, 1.47e-2*1e9, 1.61, 0.58, 0.1
+            elif (band=='z-mice'):
+                self.Mmin,self.Mmax, self.Mstar,self.alpha,self.phistar, self.Q, self.P, self.z0 = -24.08, -17.34, -21.18, -1.08, 1.35e-2*1e9, 0.76, 2.28, 0.1
+            
             else:
                 raise ValueError('Band not known')
                 
@@ -428,11 +443,11 @@ class galaxy_MF(object):
         cosmology: cosmology class
             cosmology class from the cosmology module
         '''
-        self.cosmology=cosmology
-        self.Mstarobs=self.Mstar+5*np.log10(cosmology.little_h) # At redshift z0
-        self.Mminobs=self.Mmin+5*np.log10(cosmology.little_h)
-        self.Mmaxobs=self.Mmax+5*np.log10(cosmology.little_h)        
-        self.phistarobs=self.phistar*np.power(cosmology.little_h,3.) # At redshift 0
+        self.cosmology = cosmology
+        self.Mstarobs = self.Mstar + 5 * np.log10(cosmology.little_h) # At redshift z0
+        self.Mminobs = self.Mmin + 5 * np.log10(cosmology.little_h)
+        self.Mmaxobs = self.Mmax + 5 * np.log10(cosmology.little_h)        
+        self.phistarobs = self.phistar * np.power(cosmology.little_h, 3.) # At redshift 0
         
     def get_norm(self,z):
         '''

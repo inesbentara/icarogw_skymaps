@@ -64,7 +64,7 @@ def create_pixelated_catalogs(outfolder,nside,groups_dict,fields_to_take=None,ba
     else:
         istart = np.genfromtxt(os.path.join(outfolder,'checkpoint_creation.txt')).astype(int)
     
-    Ntotal = len(groups_dict['ra'])  
+    Ntotal = len(groups_dict[fields_to_take[0]])  
     pbar = tqdm(total=Ntotal-istart)
 
     while istart < Ntotal:
@@ -507,9 +507,9 @@ def calculate_interpolant_files(outfolder, z_grid, pixel, grouping, subgrouping,
             if 'interpolant_calculated' not in list(subcat.attrs.keys()):
                 subcat.attrs['interpolant_calculated'] = False
 
-            if not  subcat.attrs['interpolant_calculated']:            
-                subcat.attrs['epsilon']=epsilon
-                subcat.attrs['ptype']=ptype   
+            if not subcat.attrs['interpolant_calculated']:
+                subcat.attrs['epsilon'] = epsilon
+                subcat.attrs['ptype'] = ptype   
                 interpo = np.zeros_like(z_grid)
                 Ngalaxies = len(cat['catalog']['z'][:])
                 toloop = np.where(cat[grouping]['valid_galaxies_interpolant'][:])[0]
@@ -532,8 +532,8 @@ def calculate_interpolant_files(outfolder, z_grid, pixel, grouping, subgrouping,
                     # An additional check to see if something is going wrong.
                     if np.isnan(interpo).all():
                         print(j)
-                        print('dk',cat['catalog']['dKbydz_g'][j])
-                        print('k',cat['catalog']['K_g'][j])
+                        print('dk', cat['catalog']['dKbydz_g'][j])
+                        print('k', cat['catalog']['K_g'][j])
                         print('Mv', Mv)
                         print('m', cat['catalog'][cat[grouping].attrs['apparent_magnitude_flag']][j])
                         print('z', cat['catalog']['z'][j])
@@ -934,11 +934,14 @@ class kcorr(object):
         band: string
             W1, K or bJ band. Others are not implemented
         '''
-        self.band=band
-        if self.band not in ['W1-glade+','K-glade+','bJ-glade+','W1-upglade','g-upglade','r-upglade']:
-            raise ValueError('Band not known please use either {:s}'.format(' '.join(['W1-glade+','K-glade+','bJ-glade+',
-                                                                                     'W1-upglade','g-upglade','r-upglade'])))
-    def __call__(self,z, k0 = None, dkbydz=None, z0 = None):
+        self.band = band
+        allowed = ['W1-glade+','K-glade+','bJ-glade+','W1-upglade','g-upglade','r-upglade',
+                   # --- NEW: MICE (K-correctionto be determined) ---
+                   'u-mice','g-mice','r-mice','i-mice','z-mice']
+        if self.band not in allowed:
+            raise ValueError('Band not known please use either {:s}'.format(' '.join(allowed)))
+
+    def __call__(self, z, k0=None, dkbydz=None, z0=None):
         '''
         Evaluates the K-corrections at a given redshift, See Eq. 2 of https://arxiv.org/abs/astro-ph/0210394
         
@@ -959,7 +962,7 @@ class kcorr(object):
         '''
         xp = get_module_array(z)
         if self.band == 'W1-glade+':
-            k_corr = -1*(4.44e-2+2.67*z+1.33*(z**2.)-1.59*(z**3.)) #From Maciej email
+            k_corr = -1 * (4.44e-2 + 2.67*z + 1.33 * (z**2.) - 1.59 * (z**3.)) #From Maciej email
         elif self.band == 'K-glade+':
             # https://iopscience.iop.org/article/10.1086/322488/pdf 4th page lhs
             to_ret=-6.0*xp.log10(1+z)
@@ -968,9 +971,14 @@ class kcorr(object):
         elif self.band == 'bJ-glade+':
             # Fig 8 caption from https://arxiv.org/pdf/astro-ph/0111011.pdf
             # Note that these corrections also includes evolution corrections
-            k_corr=(z+6*xp.power(z,2.))/(1+20.*xp.power(z,3.))
+            k_corr = (z + 6*xp.power(z, 2.)) / (1 + 20. * xp.power(z, 3.))
         elif (self.band == 'W1-upglade') | (self.band == 'g-upglade') | (self.band == 'r-upglade'):
-            k_corr = k0+dkbydz*(z-z0)
+            k_corr = k0 + dkbydz * (z - z0)
+        # --- NEW: MICE bands ---
+        elif (self.band == 'u-mice') | (self.band == 'g-mice') | (self.band == 'r-mice') | (self.band == 'i-mice') | (self.band == 'z-mice'):
+            #k_corr = xp.zeros_like(z, dtype=float) # FIXME : now there is no k-correction
+            k_corr = -2.5 * xp.log10((1.0 + z) / (1 + 0.1)) # FIXME : Test
+
         return k_corr
 
 # LVK Reviewed

@@ -117,15 +117,17 @@ def write_condor_files_catalog(home_folder, outfolder, nside, uname='simone.mast
         pass
         
     
-    fp = open(os.path.join(home_folder,'make_pixel_files.py'),'w')
-    fp.write('import icarogw \n')
-    fp.write('import h5py \n')
-    fp.write('outfolder = \'{:s}\' \n'.format(outfolder))
-    fp.write('nside = {:d} \n'.format(nside))
-    fp.write('with h5py.File(\'\',\'r\') as cat:\n')
-    fp.write('\ticarogw.catalog.create_pixelated_catalogs(outfolder,nside,{key:cat[key] for key in [\'\']})\n')
-    fp.write('icarogw.catalog.clear_empty_pixelated_files(outfolder,nside) \n')
+    fp = open(os.path.join(home_folder, 'make_pixel_files.py'), 'w')
+    fp.write('import icarogw\n')
+    fp.write('import h5py\n')
+    fp.write('outfolder = \'{:s}\'\n'.format(outfolder))
+    fp.write('nside = {:d}\n'.format(nside))
+    fp.write('with h5py.File(\'\', \'r\') as cat:\n')
+    fp.write('    data_dict = {key: cat[key][:] for key in [\'\']}\n')
+    fp.write('    icarogw.catalog.create_pixelated_catalogs(outfolder, nside, data_dict)\n')
+    fp.write('icarogw.catalog.clear_empty_pixelated_files(outfolder, nside)\n')
     fp.close()
+
         
     f = open(os.path.join(home_folder,'make_pixel_files.sh'),'w')
     f.write('#!/bin/bash')
@@ -144,9 +146,10 @@ def write_condor_files_catalog(home_folder, outfolder, nside, uname='simone.mast
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 8G \n')
+    f.write('request_memory = 16G \n')
     f.write('request_cpus = 1 \n')
-    f.write('request_disk = 10G \n')    
+    f.write('request_disk = 10G \n')
+    f.write(f'log = {home_folder}/logs/make_pixel_files.log \n')
     f.write(f'output = {home_folder}/logs/make_pixel_files.stdout \n')
     f.write(f'error = {home_folder}/logs/make_pixel_files.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -236,11 +239,12 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 8G \n')
+    f.write('request_memory = 16G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
-
+    
+    f.write(f'log = {home_folder}/logs/clear_nans_$(Item)_$(Item2).log \n')
     f.write(f'output = {home_folder}/logs/clear_nans_$(Item)_$(Item2).stdout \n')
     f.write(f'error = {home_folder}/logs/clear_nans_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -294,11 +298,12 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 8G \n')
+    f.write('request_memory = 16G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
 
+    f.write(f'log = {home_folder}/logs/calc_mthr_and_grid_$(Item)_$(Item2).log \n')
     f.write(f'output = {home_folder}/logs/calc_mthr_and_grid_$(Item)_$(Item2).stdout \n')
     f.write(f'error = {home_folder}/logs/calc_mthr_and_grid_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -353,9 +358,10 @@ def write_condor_files_initialize_icarogw_catalog(home_folder,outfolder, outfile
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 4G \n')
+    f.write('request_memory = 8G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 4G \n')    
+    f.write(f'log = {home_folder}/logs/initialize_catalog.log \n')
     f.write(f'output = {home_folder}/logs/initialize_catalog.stdout \n')
     f.write(f'error = {home_folder}/logs/initialize_catalog.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -446,11 +452,12 @@ agroup='ligo.dev.o4.cbc.hubble.icarogw'):
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 8G \n')
+    f.write('request_memory = 16G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 10G \n')    
     f.write('arguments = $(Item) $(Item2) \n')
 
+    f.write(f'log = {home_folder}/logs/calc_interpolant_$(Item)_$(Item2).log \n')
     f.write(f'output = {home_folder}/logs/calc_interpolant_$(Item)_$(Item2).stdout \n')
     f.write(f'error = {home_folder}/logs/calc_interpolant_$(Item)_$(Item2).stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -509,9 +516,10 @@ def write_condor_files_finish_catalog(home_folder,outfolder, outfile,grouping, s
     f.write('accounting_group = '+agroup+'\n')
     f.write('accounting_group_user = '+uname)
     f.write('\n')
-    f.write('request_memory = 4G \n')
+    f.write('request_memory = 8G \n')
     f.write('request_cpus = 1 \n')
     f.write('request_disk = 4G \n')    
+    f.write(f'log = {home_folder}/logs/finish_catalog.log \n')
     f.write(f'output = {home_folder}/logs/finish_catalog.stdout \n')
     f.write(f'error = {home_folder}/logs/finish_catalog.stderr \n')
     f.write('Requirements = TARGET.Dual =!= True \n')
@@ -660,6 +668,7 @@ def write_all_scripts_catalog(
             "request_memory = 4G\n"
             "request_cpus = 1\n"
             "request_disk = 4G\n"
+            f"log = {home_folder}/logs/get_scripts.log\n"
             f"output = {home_folder}/logs/get_scripts.stdout\n"
             f"error = {home_folder}/logs/get_scripts.stderr\n"
             "Requirements = TARGET.Dual =!= True\n"
